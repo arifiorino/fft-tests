@@ -7,11 +7,11 @@
 
 int pllen = 300000;
 int m;
+bool inv;
 typedef double complex comp;
 typedef struct {
   comp *P;
   int len;
-  bool inv;
 } FFTArgs;
 
 // Returns comp*
@@ -19,7 +19,7 @@ void *FFT(void *args){
   FFTArgs *A = args;
   if (A->len == 1) return A->P;
   comp omega_n = cexp(2*M_PI*I / A->len);
-  if (A->inv) omega_n = (1.0/omega_n);
+  if (inv) omega_n = (1.0/omega_n);
   comp omega = 1.0;
   comp *P_even = malloc(sizeof(comp) * A->len / 2);
   comp *P_odd = malloc(sizeof(comp) * A->len / 2);
@@ -31,11 +31,9 @@ void *FFT(void *args){
   FFTArgs *evenArgs = malloc(sizeof(FFTArgs));
   evenArgs->P = P_even;
   evenArgs->len = A->len/2;
-  evenArgs->inv = A->inv;
   FFTArgs *oddArgs = malloc(sizeof(FFTArgs));
   oddArgs->P = P_odd;
   oddArgs->len = A->len/2;
-  oddArgs->inv = A->inv;
   comp *y_even, *y_odd;
   if (A->len > pllen){
     pthread_t evenThread, oddThread;
@@ -70,7 +68,7 @@ int main(){
   FFTArgs *A = malloc(sizeof(FFTArgs));
   A->P = P;
   A->len = m;
-  A->inv = false;
+  inv = false;
   comp *y = FFT(A);
   /*
   for (int i=0;i<m; i++){
@@ -81,7 +79,7 @@ int main(){
   FFTArgs *B = malloc(sizeof(FFTArgs));
   B->P = y;
   B->len = m;
-  B->inv = true;
+  inv = true;
   comp *y2 = FFT(B);
   /*
   for (int i=0;i<m; i++){

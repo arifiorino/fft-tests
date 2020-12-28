@@ -1,3 +1,4 @@
+//FFT in-place
 #include <stdio.h>
 #include <complex.h>
 #include <stdlib.h>
@@ -6,11 +7,13 @@
 #include <pthread.h>
 
 int n;
-int logn;
+bool inv;
 typedef double complex comp;
+comp* A;
 
 int intRev(int x){
   int r=0;
+  int logn = (int)log2((double)n);
   for (int i = 0; i < logn; i++) {
     r = (r << 1) | (x & 0x01);
     x >>= 1;
@@ -26,31 +29,40 @@ comp *bitRev(comp *a){
   return A;
 }
 
-comp *FFT(comp *a, bool inv){
-  comp *A = bitRev(a);
-  int m=1;
-  for(int s=1; s<=logn; s++){
-    m*=2;
-    comp omega_n = cexp(2*M_PI*I / m);
-    if (inv) omega_n = (1.0/omega_n);
-    for (int k=0; k<n; k+=m){
-      comp omega = 1.0;
-      for (int j=0; j<m/2; j++){
-        comp t = omega * A[k + j + m/2];
-        comp u = A[k + j];
-        A[k+j] = u+t;
-        A[k+j+m/2] = u-t;
-        omega *= omega_n;
-      }
-    }
+void *toPtr(int k, int m){
+  return (void *)((((long)k) << 32) | m);
+}
+
+void *FFT2(void *args){
+  int m = (long)args;
+  if (m==1) return NULL;
+  int k = (((long)args) >> 32);
+  FFT2(toPtr(k, m/2));
+  FFT2(toPtr(k + m/2, m/2));
+
+  comp omega_n = cexp(2*M_PI*I / m);
+  if (inv) omega_n = (1.0/omega_n);
+  comp omega = 1.0;
+  for (int j=0; j<m/2; j++){
+    comp t = omega * A[k + j + m/2];
+    comp u = A[k + j];
+    A[k + j] = u + t;
+    A[k + j + m/2] = u - t;
+    omega *= omega_n;
   }
+  return NULL;
+}
+
+
+comp *FFT(comp *a, bool inv2){
+  A = bitRev(a);
+  inv=inv2;
+  FFT2(toPtr(0, n));
   return A;
 }
 
 int main(){
   scanf("%d", &n);
-  logn = (int)log2((double)n);
-  printf("logn: %d\n",logn);
   comp *P = malloc(sizeof(comp) * n);
   for (int i=0;i<n; i++){
     double x;
@@ -65,10 +77,8 @@ int main(){
   printf("\n");
   */
   comp *y2 = FFT(y, true);
-  /*
   for (int i=0;i<n; i++){
     printf("%f%+fi\n", crealf(y2[i]) / n, cimagf(y2[i]) / n);
   }
-  */
   return 0;
 }
