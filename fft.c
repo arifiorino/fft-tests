@@ -5,7 +5,7 @@
 #include <math.h>
 #include <pthread.h>
 
-int pllen = 30000000;
+int pllen = 300000;
 int m;
 typedef double complex comp;
 typedef struct {
@@ -83,8 +83,10 @@ int main(){
   B->len = m;
   B->inv = true;
   comp *y2 = FFT(B);
+  /*
   for (int i=0;i<m; i++){
     printf("%f%+fi\n", crealf(y2[i]) / m, cimagf(y2[i]) / m);
   }
+  */
   return 0;
 }
