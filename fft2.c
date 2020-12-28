@@ -9,7 +9,7 @@
 
 struct timeval start, end;
 int pllen;
-int pllen2;//131072;
+int pllen2;
 int n;
 bool inv;
 typedef double complex comp;
@@ -92,18 +92,19 @@ int main(){
   pllen2 = n/64;
   comp *P = malloc(sizeof(comp) * n);
   for (int i=0;i<n; i++){
-    double x;
+    double x,y;
     scanf("%lf", &x);
+    scanf("%lf", &y);
     P[i] = CMPLX(x, 0.0);
   }
   gettimeofday(&start, NULL);
-  comp *y = FFT(P, false);
+  comp *y = FFT(P, true);
   for (int i=0;i<n; i++){
-    //printf("%f%+fi\n", crealf(y[i]), cimagf(y[i]));
-    printf("%f\n", cabs(y[i]));
+    printf("%f\n", crealf(y[i]) / n);
+    //printf("%f%+fi\n", crealf(y[i]) / n, cimagf(y[i]) / n);
+    //printf("%f\n", cabs(y[i]));
   }
-  printf("\n");
-  comp *y2 = FFT(y, true);
+  //comp *y2 = FFT(y, true);
   /*
   for (int i=0;i<n; i++){
     printf("%f%+fi\n", crealf(y2[i]) / n, cimagf(y2[i]) / n);
