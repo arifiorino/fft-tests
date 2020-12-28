@@ -1,8 +1,7 @@
 from matplotlib import pyplot as plt
 
 with open('../out.txt','r') as f:
-  data=[]
-  data.append(float(f.readline()))
+  data=[float(line[:-1]) for line in f.readlines()]
   plt.plot(data)
 
   plt.savefig('plot.png')
