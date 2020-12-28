@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 int pllen = 300000;
 int m;
@@ -65,6 +66,8 @@ int main(){
     scanf("%lf", &x);
     P[i] = CMPLX(x, 0.0);
   }
+  struct timeval start, end;
+  gettimeofday(&start, NULL);
   FFTArgs *A = malloc(sizeof(FFTArgs));
   A->P = P;
   A->len = m;
@@ -86,5 +89,7 @@ int main(){
     printf("%f%+fi\n", crealf(y2[i]) / m, cimagf(y2[i]) / m);
   }
   */
+  gettimeofday(&end, NULL);
+  printf("%lus\n", (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec);
   return 0;
 }
