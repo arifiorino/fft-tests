@@ -13,9 +13,9 @@ with open("test.txt","w") as f:
 '''
 
 from scipy.io import wavfile
-samplerate, data = wavfile.read('../../wav/bird.wav')
+samplerate, data = wavfile.read('bird.wav')
 #print(samplerate)
-length = 32768
+length = 8192
 print(length)
 avg = sum(data)/len(data)
 r = max(min(data), max(data))

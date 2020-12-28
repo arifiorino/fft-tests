@@ -8,8 +8,8 @@
 #include <sys/time.h>
 
 struct timeval start, end;
-int pllen = 200000;
-int pllen2 = 512;//131072;
+int pllen;
+int pllen2;//131072;
 int n;
 bool inv;
 typedef double complex comp;
@@ -88,6 +88,8 @@ comp *FFT(comp *a, bool inv2){
 
 int main(){
   scanf("%d", &n);
+  pllen = n/40;
+  pllen2 = n/64;
   comp *P = malloc(sizeof(comp) * n);
   for (int i=0;i<n; i++){
     double x;
