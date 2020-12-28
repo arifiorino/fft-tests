@@ -1,5 +1,6 @@
 import random
-m = 8
+m = 2 ** 23
+print(m)
 with open("test.txt", "w") as f:
   
   f.write(str(m)+"\n")
