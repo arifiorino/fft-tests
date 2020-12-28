@@ -9,7 +9,7 @@
 
 struct timeval start, end;
 int pllen = 200000;
-int pllen2 = 131072;
+int pllen2 = 512;//131072;
 int n;
 bool inv;
 typedef double complex comp;
@@ -64,8 +64,9 @@ void *FFT2(void *args){
     FFT2(toPtr(k + m/2, m/2));
   }
 
-  comp omega_n = cexp(2*M_PI*I / m);
-  if (inv) omega_n = (1.0/omega_n);
+  comp omega_n;
+  if (inv) omega_n = cexp(-2*M_PI*I / m);
+  else omega_n = cexp(2*M_PI*I / m);
   comp omega = 1.0;
   for (int j=0; j<m/2; j++){
     comp t = omega * A[k + j + m/2];
@@ -95,17 +96,18 @@ int main(){
   }
   gettimeofday(&start, NULL);
   comp *y = FFT(P, false);
-  /*
   for (int i=0;i<n; i++){
-    printf("%f%+fi, ", crealf(y[i]), cimagf(y[i]));
+    //printf("%f%+fi\n", crealf(y[i]), cimagf(y[i]));
+    printf("%f\n", cabs(y[i]));
   }
   printf("\n");
-  */
   comp *y2 = FFT(y, true);
+  /*
   for (int i=0;i<n; i++){
     printf("%f%+fi\n", crealf(y2[i]) / n, cimagf(y2[i]) / n);
   }
+  */
   gettimeofday(&end, NULL);
-  printf("%lus\n", (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec);
+  //printf("%lus\n", (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec);
   return 0;
 }
