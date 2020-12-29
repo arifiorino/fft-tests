@@ -25,18 +25,16 @@ for x in data[:length]:
 '''
 
 import cmath, math, random
+import numpy as np
 length=2**18
 freq=440
 rate=44100
-D=[]
+D=np.zeros(length,dtype=np.complex_)
 with open("test.txt","w") as f:
   f.write(str(length)+"\n")
-  for i in range(length//2-1):
-    if i!=0 and i%int(freq*length/rate)==0:
-      x=cmath.rect(100000,random.uniform(0,2*math.pi))
-      D.append(x)
-    else:
-      D.append(0)
+  freq2=int(freq*length/rate)
+  for i in range(1,(length//2)//freq2):
+    D[i*freq2]=cmath.rect(100000/(2**(i-1)),random.uniform(0,2*math.pi))
   f.write(str(0)+"\n")
   f.write(str(0)+"\n")
   for i in range(length//2-1):
