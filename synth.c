@@ -10,7 +10,7 @@
 struct timeval start, end;
 int pllen;
 int pllen2;
-int n = 262144;
+int n;
 bool inv;
 typedef double complex comp;
 comp* X, *Y;
@@ -77,7 +77,6 @@ void *FFT2(void *args){
   return NULL;
 }
 
-
 comp *FFT(comp *X2, bool inv2){
   pllen = n/40;
   pllen2 = n/64;
@@ -101,38 +100,60 @@ double getEnvelope(envelope *e, double x){
   return (e->middleY - e->endY) / (1 - e->middleX) * (1-x) + e->endY;
 }
 
-int main(){
-  gettimeofday(&start, NULL);
-  srand((unsigned int)start.tv_usec);
-
+comp *getNote(int freq, int rate){
   comp *F = malloc(sizeof(comp) * n);
   for (int i=0;i<n; i++){
     F[i] = CMPLX(0.0, 0.0);
   }
-  int length=pow(2,18);
-  int freq=440;
-  int rate=44100;
-  int freq2=freq*length/rate;
-  int loops=length/2/freq2;
-  for (int i=1;i<loops; i++){
+  int freq2=freq*n/rate;
+  double harmonics[]={100000.0, 40000.0, 25000.0, 18000.0, 18000.0,
+                18000.0, 15000.0, 12000.0, 11000.0, 9000.0, 5000.0};
+  //int loops=n/2/freq2;
+  for (int i=1;i<11; i++){
     double phase = (double)rand()/RAND_MAX*2*M_PI;
-    double mag = 100000.0/pow(2,(i-1));
+    double mag = harmonics[i];//100000.0/pow(2,(i-1));
     F[i*freq2]=CMPLX(mag*cos(phase),mag*sin(phase));
     F[n-(i*freq2)]=conj(F[i*freq2]);
-    //freq2 = (int)(0.8*freq2);
   }
+  comp *S = FFT(F, true);
+  free(F);
+  return S;
+}
+
+int main(){
+  gettimeofday(&start, NULL);
+  srand((unsigned int)start.tv_usec);
+
+  n = pow(2,18);
+
+  comp *S = getNote(440, 44100);
+  /*
+  comp *S2 = getNote(261, 44100);
+  n*=2;
+  comp *S = malloc(sizeof(comp)*n);
+  for (int i=0;i<n/2; i++){
+    S[i]=S1[i]/n;
+    S[i+n/2]=S2[i]/n;
+  }
+  comp *F = FFT(S, false);
+  for (int i=0;i<n; i++){
+    printf("%f\n", creal(S1[i])/n);
+    if (cabs(F[i])>5000000000)
+      printf("%f\n", carg(F[i]));
+    else printf("0\n");
+  }
+  */
 
   envelope e;
   e.startY=0.1;
   e.middleX=0.2;
   e.middleY=1;
   e.endY=0;
-  comp *S = FFT(F, false);
   for (int i=0;i<n; i++){
     S[i]*=getEnvelope(&e,(double)i/n);
     printf("%f\n", crealf(S[i]) / n);
     //printf("%f%+fi\n", crealf(S[i]) / n, cimagf(S[i]) / n);
-    //printf("%f\n", cabs(y[i]));
+    //printf("%f\n", cabs(F[i]));
   }
   gettimeofday(&end, NULL);
   //printf("%lus\n", (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec);
