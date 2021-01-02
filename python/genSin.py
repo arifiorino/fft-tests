@@ -12,18 +12,17 @@ with open("test.txt","w") as f:
     f.write(str(math.sin(2*math.pi*i/fund))+"\n")
 '''
 
-'''
 from scipy.io import wavfile
-samplerate, data = wavfile.read('bird.wav')
-#print(samplerate)
-length = 8192
+import numpy as np
+samplerate, data = wavfile.read('classical.wav')
+length = 2**20
 print(length)
 avg = sum(data)/len(data)
-r = max(min(data), max(data))
+r = max(-np.min(data), np.max(data))
 for x in data[:length]:
-  print((x-avg)/r)
-'''
+  print("%f" % ((x-avg)/r*100))
 
+'''
 import cmath, math, random
 import numpy as np
 length=2**18
@@ -45,3 +44,4 @@ with open("test.txt","w") as f:
   for i in range(length//2-1):
       f.write(str(D[len(D)-i-1].real)+"\n")
       f.write(str(-D[len(D)-i-1].imag)+"\n")
+      '''
