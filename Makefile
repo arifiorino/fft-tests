@@ -8,6 +8,9 @@ fft2: fft2.c
 synth: synth.c
 	gcc -pthread -std=gnu11 synth.c  -lm -o synth -g
 
+synth2: synth2.c
+	gcc -pthread -std=gnu11 synth2.c  -lm -o synth2 -g
+
 spectrogram: spectrogram.c
 	gcc -pthread -std=gnu11 spectrogram.c  -lm -o spectrogram -g
 

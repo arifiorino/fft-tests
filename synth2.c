@@ -11,6 +11,7 @@ int pllen;
 int n;
 int windows;
 int overlap;
+bool inv;
 typedef double complex comp;
 comp *S;
 comp **spec;
@@ -26,18 +27,17 @@ int intRev(int x){
   return x;
 }
 
-comp *bitRev(comp *X){
-  comp *Y = malloc(sizeof(comp)*n);
+comp *bitRev(comp *X, comp *Y){
   for (int i=0; i<n; i++){
     Y[intRev(i)]=X[i];
   }
   return Y;
 }
 
-void FFT2(comp *Y, bool inv, int k, int m){
+void FFT2(comp *Y, int k, int m){
   if (m==1) return;
-  FFT2(Y, inv, k, m/2);
-  FFT2(Y, inv, k + m/2, m/2);
+  FFT2(Y, k, m/2);
+  FFT2(Y, k + m/2, m/2);
   comp omega_n;
   if (inv) omega_n = cexp(-2*M_PI*I / m);
   else omega_n = cexp(2*M_PI*I / m);
@@ -51,41 +51,57 @@ void FFT2(comp *Y, bool inv, int k, int m){
   }
 }
 
-comp *FFT(comp *X, bool inv){
-  comp *Y = bitRev(X);
-  FFT2(Y, inv, 0, n);
-  return Y;
+void addFreq(comp *F, double freq, double width){
+  double max=1000.0;
+  double slope = -1.0*max/width;
+  //printf("freq:%f\n",freq);
+  for (int i=freq; freq-i<width; i--){
+    F[i] += CMPLX((freq-i)*slope + max, 0.0);
+    //printf("%d %f\n",i,(freq-i)*slope + max);
+    F[n-i]=F[i];
+  }
+  for (int i=(int)freq+1; i-freq<width; i++){
+    F[i] += CMPLX((i-freq)*slope + max, 0.0);
+    //printf("%d %f\n",i,(i-freq)*slope + max);
+    F[n-i]=F[i];
+  }
 }
 
 void *FFTs(void *args){
   int start=(long)args;
   for (int i=start; i<start+pllen && i<windows; i++){
-    spec[i] = FFT(S+(i*n/overlap), false);
+    bitRev(spec[i], S+(i*n));
+    FFT2(S+(i*n), 0, n);
   }
 }
 
 int main(){
   gettimeofday(&start, NULL);
   //srand((unsigned int)start.tv_usec);
-  int len;
-  scanf("%d", &len);
+  int len=1048576;
   n = 2048;
-  overlap=1;//8
+  windows = len/n;
 
-  S = malloc(sizeof(comp) * len);
-  for (int i=0;i<len; i++){
-    double x;
-    scanf("%lf", &x);
-    S[i] = CMPLX(x, 0.0);
+  spec = malloc(sizeof(comp *) * windows);
+  double baseFreq2=440.0*n/44100.0;
+  double freq2;
+  for (int i=0; i<windows; i++){
+    freq2=baseFreq2;//+baseFreq2*i/windows;
+    spec[i]=malloc(sizeof(comp) * n);
+    for (int j=0; j<n; j++){
+      spec[i][j]=CMPLX(0.0,0.0);
+    }
+    for (int k=1; k<=10; k++){
+      addFreq(spec[i], k*freq2, 0.5);
+    }
   }
   
-  windows = len/n*overlap-(overlap-1);
+  S=malloc(sizeof(comp) * len);
   int numThreads = 64;
-  pllen = len/n*overlap/numThreads;
-  spec = malloc(sizeof(comp *) * windows);
+  pllen = windows/numThreads;
+  inv=true;
   pthread_t *threads = malloc(sizeof(pthread_t) * numThreads);
   for (int i=0; i<windows; i+=pllen){
-    //FFTs((void *)(long)i);
     pthread_create(&threads[i/pllen], NULL, FFTs, (void *)(long)i);
   }
   for (int i=0; i<numThreads; i++){
@@ -94,12 +110,14 @@ int main(){
   free(threads);
 
   for (int i=0; i<windows; i++){
-    for (int j=0; j<n; j++){
-      printf("%f\n", cabs(spec[i][j]));
-    }
     free(spec[i]);
   }
   free(spec);
+
+  for (int i=0;i<len; i++){
+    printf("%lf\n", S[i]);
+  }
+  free(S);
 
   gettimeofday(&end, NULL);
   //printf("%lus\n", (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec);
